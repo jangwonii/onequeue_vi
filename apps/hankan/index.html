@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#3558f4"><meta name="description" content="작은 할 일과 깊은 집중. 오늘을 한 칸씩 채우는 나만의 작업 공간.">
+  <title>한 칸 — 나의 작은 집중 공간</title><link rel="stylesheet" href="/styles.css"><script src="/app.js" type="module"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="한 칸 홈"><span class="brand-icon">h<span>.</span></span><span>한 칸<small>YOUR DAILY SPACE</small></span></a>
+    <p class="nav-label">MY WORKSPACE</p>
+    <nav aria-label="내 작업 공간">
+      <button class="nav-item active" data-nav="all"><span class="nav-icon">▦</span>오늘의 할 일<span id="nav-count" class="nav-count">0</span></button>
+      <button class="nav-item" data-nav="completed"><span class="nav-icon">☑</span>완료한 일</button>
+      <button class="nav-item" id="history-open"><span class="nav-icon">◷</span>집중 기록</button>
+    </nav>
+    <div class="sidebar-note"><span class="note-star">✳</span><p>큰 변화도<br>작은 한 칸에서.</p><span>지금 할 수 있는 일 하나면<br>충분해요.</span></div>
+    <div class="profile"><span class="avatar">나</span><div>나의 작업 공간<small>이 컴퓨터에 저장돼요</small></div><span class="online-dot" title="로컬 저장"></span></div>
+  </aside>
+  <main>
+    <header class="topbar"><span>MY DAY <span class="slash">/</span> 오늘의 공간</span><div><span id="save-status" class="save-status">연결 중</span><span class="date" id="today-date"></span></div></header>
+    <section class="greeting"><div><p class="eyebrow">A LITTLE PROGRESS, EVERY DAY</p><h1>오늘도, 한 칸 앞으로<span>.</span></h1><p class="intro">해야 할 일은 가볍게 정리하고, 중요한 일에 깊이 집중해요.</p></div><div class="greeting-art" aria-hidden="true"><span class="art-orbit"></span><span class="art-tile">✓</span><span class="art-star">✳</span></div></section>
+    <div class="stats" aria-label="오늘의 요약">
+      <div class="stat"><span class="stat-symbol lavender">▦</span><div><span>남은 할 일</span><p><strong id="remaining-count">0</strong><small>개</small></p></div></div>
+      <div class="stat"><span class="stat-symbol green">✓</span><div><span>완료한 일</span><p><strong id="completed-count">0</strong><small>개</small></p></div><span id="completion-label" class="stat-note">나만의 속도로</span></div>
+      <div class="stat"><span class="stat-symbol apricot">◷</span><div><span>오늘의 집중</span><p><strong id="focus-minutes">0</strong><small>분</small></p></div></div>
+    </div>
+    <div class="workspace-grid">
+      <section class="tasks-panel card">
+        <div class="section-heading"><div><h2>나의 할 일 <span id="task-total" class="count-badge">0</span></h2><p>한 번에 하나씩, 천천히 채워보세요.</p></div><button id="add-focus" class="subtle-button">＋ 할 일 추가</button></div>
+        <form id="task-form" class="add-form"><label class="sr-only" for="task-title">새 할 일</label><span aria-hidden="true">＋</span><input id="task-title" name="title" maxlength="120" required placeholder="어떤 일을 해볼까요?" autocomplete="off"><label class="sr-only" for="task-priority">중요도</label><select id="task-priority" name="priority"><option value="normal">보통</option><option value="important">중요</option></select><button type="submit" aria-label="할 일 저장">↵</button></form>
+        <div class="filter-row"><div class="filters" role="group" aria-label="할 일 필터"><button data-filter="all" class="selected">전체</button><button data-filter="active">진행 중</button><button data-filter="completed">완료</button></div><span class="list-hint">작은 시작을 응원해요</span></div>
+        <div id="task-list" class="task-list" aria-live="polite"></div>
+        <div class="suggestions"><span>가볍게 시작하기</span><button data-suggest="책 10쪽 읽기">책 10쪽 읽기 ↗</button><button data-suggest="오늘의 아이디어 정리하기">아이디어 정리 ↗</button></div>
+      </section>
+      <aside class="focus-panel" aria-label="집중 타이머">
+        <div class="focus-top"><span class="focus-eyebrow"><span class="focus-dot"></span> FOCUS MODE</span><span class="tiny-square">↗</span></div>
+        <h2>지금은, 이 일에만.</h2><p class="focus-description">작은 타이머 하나로 만드는 깊은 집중.</p>
+        <label for="focus-task" class="sr-only">집중할 할 일</label><select id="focus-task"><option value="">자유롭게 집중하기</option></select>
+        <div class="timer-face"><svg viewBox="0 0 240 240" aria-hidden="true"><circle class="timer-track" cx="120" cy="120" r="108"/><circle id="timer-ring" class="timer-ring" cx="120" cy="120" r="108" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/></svg><div><span id="timer-time" role="timer" aria-label="남은 집중 시간">25:00</span><span id="timer-label">나를 위한 집중 시간</span></div></div>
+        <div class="duration-options" aria-label="집중 시간 선택"><button data-minutes="15">15분</button><button data-minutes="25" class="selected">25분</button><button data-minutes="50">50분</button></div>
+        <button id="timer-primary" class="timer-primary">▶ 집중 시작하기</button><button id="timer-reset" class="timer-reset" disabled>↺ 타이머 초기화</button>
+        <p class="focus-footnote">완료한 집중 시간만 기록에 남아요.</p>
+      </aside>
+    </div>
+    <section class="bottom-note"><span>✧</span><p>모든 일을 끝내지 않아도 괜찮아요.<br><strong>오늘의 한 칸이 내일을 바꿉니다.</strong></p><span class="bottom-wordmark">one day, one step.</span></section>
+    <footer><span>한 칸 <span class="footer-dot">·</span> 나의 작은 집중 공간</span><button id="export-data">내 기록 내려받기 ↗</button></footer>
+  </main>
+  <div id="toast" role="status" class="toast" hidden></div>
+  <dialog id="edit-dialog"><form id="edit-form"><div class="dialog-heading"><h2>할 일 수정</h2><button type="button" data-close="edit-dialog" aria-label="닫기">×</button></div><label for="edit-title">할 일</label><input id="edit-title" maxlength="120" required><label for="edit-priority">중요도</label><select id="edit-priority"><option value="normal">보통</option><option value="important">중요</option></select><div class="dialog-actions"><button type="button" id="delete-task" class="danger-button">삭제</button><button type="submit" class="primary-button">저장하기</button></div></form></dialog>
+  <dialog id="history-dialog"><div class="dialog-heading"><div><p class="eyebrow">YOUR FOCUS JOURNEY</p><h2>차곡차곡, 집중 기록</h2></div><button data-close="history-dialog" aria-label="닫기">×</button></div><p class="history-description">끝까지 채운 집중 시간을 모았어요. 최근 100회를 보관합니다.</p><div id="session-list"></div></dialog>
+</body>
+</html>

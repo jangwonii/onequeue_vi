@@ -1,0 +1,69 @@
+{
+  "projects": [{
+    "id": "seven",
+    "lineage": { "product": "seven", "variant": "local" },
+    "name": "SEVEN — 원큐 첫 검증 프로젝트",
+    "root": "..",
+    "sources": ["package.json", "model.js", "server.mjs", "app.js", "index.html", "styles.css", "backend", "tests", "scripts"],
+    "checks": {
+      "test": { "args": ["--test", "tests/*.test.mjs"], "timeoutMs": 60000 },
+      "build": { "args": ["scripts/build.mjs"], "timeoutMs": 60000 },
+      "browser": { "args": ["tests/browser.mjs"], "timeoutMs": 120000 }
+    },
+    "preview": { "module": "server.mjs", "export": "createApp", "healthPath": "/api/health" },
+    "browserChannel": "msedge"
+  }, {
+    "id": "hankan",
+    "lineage": { "product": "hankan", "variant": "local" },
+    "name": "한 칸 — 할 일과 집중 타이머",
+    "root": "../apps/hankan",
+    "sources": ["package.json", "server.mjs", "index.html", "app.js", "styles.css", "scripts", "tests"],
+    "checks": {
+      "test": { "args": ["--test", "tests/api.test.mjs"], "timeoutMs": 60000 },
+      "build": { "args": ["scripts/build.mjs"], "timeoutMs": 60000 },
+      "browser": { "args": ["tests/browser.mjs"], "timeoutMs": 120000 }
+    },
+    "preview": { "module": "server.mjs", "export": "createApp", "healthPath": "/api/health" },
+    "browserChannel": "msedge"
+  }, {
+    "id": "bookmark",
+    "lineage": { "product": "bookmark", "variant": "local" },
+    "name": "책갈피 — 나의 작은 서재",
+    "root": "../apps/bookmark",
+    "sources": ["package.json", "server.mjs", "index.html", "app.js", "styles.css", "scripts", "tests"],
+    "checks": {
+      "test": { "args": ["--test", "tests/api.test.mjs"], "timeoutMs": 60000 },
+      "build": { "args": ["scripts/build.mjs"], "timeoutMs": 60000 },
+      "browser": { "args": ["tests/browser.mjs"], "timeoutMs": 120000 }
+    },
+    "preview": { "module": "server.mjs", "export": "createApp", "healthPath": "/api/health" },
+    "browserChannel": "msedge"
+  }, {
+    "id": "promise",
+    "lineage": { "product": "promise", "variant": "archived" },
+    "name": "우리의 약속 — 함께 지키는 7일",
+    "root": "../apps/promise",
+    "sources": ["package.json", "server.mjs", "model.js", "store.mjs", "index.html", "app.js", "styles.css", "scripts", "tests"],
+    "checks": {
+      "test": { "args": ["--test", "tests/*.test.mjs"], "timeoutMs": 60000 },
+      "build": { "args": ["scripts/build.mjs"], "timeoutMs": 60000 },
+      "browser": { "args": ["tests/browser.mjs"], "timeoutMs": 120000 }
+    },
+    "preview": { "module": "server.mjs", "export": "createApp", "healthPath": "/api/health" },
+    "browserChannel": "msedge"
+  }, {
+    "id": "promise-release",
+    "lineage": { "product": "promise", "variant": "hosted", "supersedes": "promise" },
+    "name": "우리의 약속 v2 — 실제 배포",
+    "root": "../sites/promise",
+    "sources": ["package.json", "package-lock.json", "app", "lib", "public", "db", "drizzle", "scripts", "tests", "build", "vite.config.ts", ".openai/hosting.json", "PRODUCT.md", "OPERATIONS.md"],
+    "checks": {
+      "domain": { "args": ["tests/domain-report.mjs"], "timeoutMs": 60000, "reportPath": "test-results/domain-cases.json" },
+      "build": { "args": ["scripts/verify-build.mjs"], "timeoutMs": 120000 },
+      "integration": { "args": ["tests/integration.mjs"], "timeoutMs": 240000, "reportPath": "test-results/integration-cases.json" },
+      "quality": { "args": ["tests/quality.mjs"], "timeoutMs": 90000, "reportPath": "test-results/quality-cases.json" }
+    },
+    "browserChannel": "msedge",
+    "deploymentOrigins": ["https://our-promise-week.weun2002.chatgpt.site"]
+  }]
+}

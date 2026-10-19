@@ -1,0 +1,14 @@
+{
+  "name": "bookmark-reading-room",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs",
+    "test": "node --test tests/api.test.mjs",
+    "build": "node scripts/build.mjs",
+    "test:browser": "node tests/browser.mjs"
+  }
+}

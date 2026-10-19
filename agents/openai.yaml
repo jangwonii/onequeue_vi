@@ -1,0 +1,4 @@
+interface:
+  display_name: "원큐 바이브코딩"
+  short_description: "제품별 디자인과 핵심 기능을 구현하고 출시 준비·배포까지 검증합니다"
+  default_prompt: "$one-shot-app-builder를 사용해 제 아이디어의 디자인·기능·운영 흐름을 완성하고 허가된 배포까지 검증해 주세요."

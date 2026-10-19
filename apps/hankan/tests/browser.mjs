@@ -1,0 +1,57 @@
+import assert from 'node:assert/strict';
+import { mkdir, readFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
+import { createApp } from '../server.mjs';
+const module = process.env.PLAYWRIGHT_MODULE || new URL('../../../onequeue-mcp/node_modules/playwright/index.mjs', import.meta.url).pathname;
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ? pathToFileURL(module).href : new URL('../../../onequeue-mcp/node_modules/playwright/index.mjs', import.meta.url).href);
+const server = await createApp({ database: ':memory:' });
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'msedge', headless: true });
+const context = await browser.newContext({ viewport: { width: 1440, height: 1040 }, acceptDownloads: true });
+const page = await context.newPage(), errors = []; page.on('pageerror', e => errors.push(e.message));
+await mkdir('test-results', { recursive: true });
+async function add(title, priority = 'normal') {
+  await page.locator('#task-title').fill(title); await page.locator('#task-priority').selectOption(priority);
+  await page.getByRole('button', { name: '할 일 저장', exact: true }).click();
+  await page.getByText(title, { exact: true }).first().waitFor();
+}
+try {
+  await page.goto(`http://127.0.0.1:${server.address().port}`);
+  await page.getByText('오늘의 첫 한 칸을 적어보세요', { exact: true }).waitFor();
+  await page.screenshot({ path: 'test-results/empty-desktop.png', fullPage: true });
+  await add('프로젝트 아이디어 정리하기', 'important');
+  await add('책 10쪽 읽기'); await add('작업 공간 정리하기');
+  await page.getByRole('checkbox', { name: '작업 공간 정리하기 완료', exact: true }).check();
+  await page.waitForFunction(() => document.querySelector('#completed-count').textContent === '1');
+  await page.reload(); await page.getByText('프로젝트 아이디어 정리하기', { exact: true }).first().waitFor();
+  assert.equal(await page.getByRole('checkbox', { name: '작업 공간 정리하기 완료', exact: true }).isChecked(), true);
+  await page.locator('[data-filter="completed"]').click(); assert.equal(await page.locator('.task-row').count(), 1);
+  await page.locator('[data-filter="all"]').click();
+  await page.getByRole('button', { name: '책 10쪽 읽기 수정', exact: true }).click();
+  await page.locator('#edit-title').fill('책 20쪽 읽기'); await page.getByRole('button', { name: '저장하기', exact: true }).click();
+  await page.getByText('책 20쪽 읽기', { exact: true }).first().waitFor();
+  await page.getByRole('button', { name: '프로젝트 아이디어 정리하기에 집중하기', exact: true }).click();
+  await page.locator('[data-minutes="15"]').click(); await page.locator('#timer-primary').click();
+  await page.getByText('오롯이 집중하는 중', { exact: true }).waitFor();
+  await page.locator('#timer-primary').click(); await page.getByText('잠시 숨을 고르는 중', { exact: true }).waitFor();
+  const paused = await page.locator('#timer-time').innerText();
+  await page.reload(); await page.getByText('잠시 숨을 고르는 중', { exact: true }).waitFor(); assert.equal(await page.locator('#timer-time').innerText(), paused);
+  await page.locator('#timer-primary').click(); await page.getByText('오롯이 집중하는 중', { exact: true }).waitFor();
+  await page.locator('#timer-reset').click(); await page.getByText('나를 위한 집중 시간', { exact: true }).waitFor();
+  await page.locator('#history-open').click(); await page.getByText('첫 집중을 기다리고 있어요', { exact: true }).waitFor(); await page.locator('[data-close="history-dialog"]').click();
+  const downloaded = page.waitForEvent('download'); await page.locator('#export-data').click(); const download = await downloaded;
+  const payload = JSON.parse(await readFile(await download.path(), 'utf8')); assert.equal(payload.tasks.length, 3); assert.equal(payload.sessions.length, 0);
+  await page.getByRole('button', { name: '책 20쪽 읽기 수정', exact: true }).click(); await page.locator('#delete-task').click();
+  await page.waitForFunction(() => document.querySelectorAll('.task-row').length === 2);
+  await add('<img src=x onerror=alert(1)>'); assert.equal(await page.locator('.task-list img').count(), 0);
+  await page.getByRole('button', { name: '<img src=x onerror=alert(1)> 수정', exact: true }).click(); await page.locator('#delete-task').click();
+  await page.waitForFunction(() => document.querySelectorAll('.task-row').length === 2);
+  await add('이번 주 계획 가볍게 세우기');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: 'test-results/desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: 'test-results/mobile.png', fullPage: true });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1 && e.getBoundingClientRect().width > 0).map(e => ({ tag: e.tagName, class: e.className, right: e.getBoundingClientRect().right })).slice(0, 12))));
+  assert.deepEqual(errors, []);
+  console.log('Browser checks passed: add/edit/delete, completion filters, reload persistence, timer pause/resume/reset, export, input escaping, desktop and mobile.');
+} finally { await browser.close(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }

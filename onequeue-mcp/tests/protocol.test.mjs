@@ -1,0 +1,50 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { fixture, brief, eventually } from './helpers.mjs';
+
+test('real stdio MCP client discovers and calls tools, prompts, resources and cleanup', { timeout: 30000 }, async () => {
+  const f = await fixture();
+  const client = new Client({ name: 'onequeue-integration-test', version: '1.0.0' });
+  const transport = new StdioClientTransport({ command: process.execPath, args: [fileURLToPath(new URL('../src/index.mjs', import.meta.url)), '--config', f.configPath], stderr: 'pipe' });
+  let stderr = ''; transport.stderr?.on('data', c => stderr += c);
+  const call = async (name, args) => client.callTool({ name, arguments: { projectId: 'fixture', ...args } });
+  try {
+    await client.connect(transport);
+    const tools = await client.listTools(); assert.equal(tools.tools.length, 14);
+    assert.ok(tools.tools.some(t=>t.name==='record_finding'));
+    assert.ok(tools.tools.some(t=>t.name==='resolve_finding'));
+    assert.ok(tools.tools.every(t => t.inputSchema.type === 'object'));
+    const list = await client.callTool({ name: 'inspect_project', arguments: {} });
+    assert.equal(list.structuredContent.projects[0].id, 'fixture');
+    const info = await call('inspect_project', {}); assert.equal(info.isError, undefined);
+    const bad = await call('inspect_project', { projectId: '../outside' }); assert.equal(bad.isError, true);
+    const unknown = await call('run_checks', { requestKey: 'unknown', checkIds: ['missing'] });
+    assert.equal(unknown.isError, true); assert.equal(unknown.structuredContent.error.code, 'UNKNOWN_CHECK');
+    await call('save_build_brief', { expectedVersion: 0, brief });
+    const job = (await call('run_checks', { requestKey: 'first-check', checkIds: ['pass'] })).structuredContent;
+    const done = await eventually(async () => (await call('get_job_result', { jobId: job.id })).structuredContent, j => j.status === 'succeeded');
+    assert.doesNotMatch(done.logs, /sample-secret-value/);
+    const summary=(await call('get_project_status', {})).structuredContent;
+    assert.equal(summary.verified,true);assert.equal(summary.serverVersion,'0.3.0');assert.equal(summary.jobs,undefined);
+    assert.ok((await call('get_project_status',{detail:'full'})).structuredContent.jobs.length>0);
+    const resource = await client.readResource({ uri: 'onequeue://projects/fixture/brief' });
+    assert.equal(JSON.parse(resource.contents[0].text).version, 1);
+    assert.ok((await client.listResources()).resources.length >= 3);
+    assert.match((await client.readResource({ uri: 'onequeue://guide' })).contents[0].text, /원큐/);
+    const prompts = await client.listPrompts(); assert.equal(prompts.prompts[0].name, 'build_app');
+    const prompt = await client.getPrompt({ name: 'build_app', arguments: { projectId: 'fixture', idea: 'Make a counter' } });
+    assert.match(prompt.messages[0].content.text, /Make a counter/);
+    const preview = (await call('start_preview', { requestKey: 'preview' })).structuredContent;
+    const ready = await eventually(async () => (await call('get_job_result', { jobId: preview.id })).structuredContent, j => j.status === 'ready');
+    const session = (await call('browser_action', { action: 'open', previewId: preview.id })).structuredContent;
+    const shot = (await call('browser_action', { action: 'snapshot', sessionId: session.sessionId })).structuredContent;
+    const image = await client.readResource({ uri: shot.artifact.uri });
+    assert.equal(image.contents[0].mimeType, 'image/png'); assert.ok(image.contents[0].blob.length > 1000);
+    await client.close();
+    await eventually(async () => { try { await fetch(ready.url); return false; } catch { return true; } }, Boolean);
+    assert.doesNotMatch(stderr, /SyntaxError|UnhandledPromiseRejection|Invalid JSON/);
+  } finally { await client.close(); await f.cleanup(); }
+});

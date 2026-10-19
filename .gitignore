@@ -1,0 +1,10 @@
+node_modules/
+dist/
+test-results/
+.playwright/
+data/
+.env
+.onequeue/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

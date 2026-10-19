@@ -1,0 +1,1 @@
+{"projects":[{"id":"dispatch","name":"출고 데스크","root":"../apps/dispatch","sources":["package.json","PRODUCT.md","server.mjs","index.html","app.js","styles.css","build.mjs","tests"],"checks":{"build":{"args":["build.mjs"],"timeoutMs":60000},"verify":{"args":["tests/verify.mjs"],"timeoutMs":120000,"reportPath":"test-results/cases.json"}},"browserChannel":"msedge"}]}
